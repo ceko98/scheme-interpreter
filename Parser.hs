@@ -26,7 +26,7 @@ module Parser
   ) where
 
 import Data.Maybe (fromMaybe)
-import qualified Control.App2licative as A
+import qualified Control.Applicative as A
 
 ------------------------------------------------------------
 -- The parser type
