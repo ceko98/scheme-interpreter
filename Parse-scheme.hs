@@ -110,8 +110,11 @@ numberParser = do
   x <- number
   result $ Number x
 
-stringParser :: Parser Value
-stringParser = do
+listParser :: Parser Value
+listParser = do
+  char '\''
+  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
+  result $ List xs
 
 
 -- fmap :: (a -> b) -> f a -> f b 
