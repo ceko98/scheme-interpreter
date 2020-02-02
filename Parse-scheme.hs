@@ -11,12 +11,13 @@ import Parser
   , many, some
   )
 
-import Data.Char (isNumber)
+import Data.Char (isNumber, isLetter)
 
 data Value
   = Bool Bool
   | Number Integer
   | List [Value]
+  | Variable (String, Value)
   deriving Show
 
 -- char :: Char -> Parser Char
@@ -46,8 +47,8 @@ parseMaybe f = do
 isInteger :: Char -> Maybe Integer
 isInteger c = if isNumber c then Just $ read [c] else Nothing
 
-isChar :: Char -> Char -> Maybe Char
-isChar c1 c2 = if c1 == c2 then Just c1 else Nothing
+isChar :: (Char -> Bool) -> Char -> Maybe Char
+isChar f c = if f c then Just c else Nothing
 
 number :: Parser Integer
 number = fmap (foldl ((+) . (10*)) 0) $ some $ parseMaybe isInteger
@@ -57,12 +58,12 @@ maybeToParser Nothing = empty
 maybeToParser (Just x) = pure x
 
 char :: Char -> Parser Char
-char ch = parseMaybe $ isChar ch
+char ch = parseMaybe $ isChar (ch==)
 
 string :: String -> Parser String
 string [] = result []
 string (s:str) = do
-  x <- parseMaybe $ isChar s
+  x <- parseMaybe $ isChar (s==)
   xs <- string str
   result $ x:xs
 
@@ -113,10 +114,18 @@ numberParser = do
 listParser :: Parser Value
 listParser = do
   char '\''
-  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
+  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> scopeParser) <|> result []
   result $ List xs
 
+wordParser :: Parser String
+wordParser = do
+  str <- many $ parseMaybe $ isChar isLetter
+  result str
 
--- fmap :: (a -> b) -> f a -> f b 
--- Parser [Integer] -> Parser Integer
--- [Integer] -> Integer
+scopeParser :: Parser [Value]
+scopeParser = between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
+
+valueParser :: Parser Value
+valueParser = boolParser
+  <|> numberParser
+  -- <|> scopeParser
