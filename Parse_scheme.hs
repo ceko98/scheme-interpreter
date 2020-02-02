@@ -114,7 +114,7 @@ numberParser = do
 listParser :: Parser Value
 listParser = do
   char '\''
-  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> scopeParser) <|> result []
+  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
   result $ List xs
 
 wordParser :: Parser String
