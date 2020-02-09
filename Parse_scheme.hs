@@ -4,6 +4,9 @@
 {-# OPTIONS_GHC -fwarn-name-shadowing #-}          -- use different names!
 {-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- warn about incomplete patterns v2
 
+module Parse
+  ( isChar, Monoid(..) ) where
+
 import Parser
   ( Parser, nom
   , parse
@@ -13,19 +16,9 @@ import Parser
 
 import Data.Char (isNumber, isLetter)
 
-data Value
-  = Bool Bool
-  | Number Integer
-  | List [Value]
-  | Variable (String, Value)
-  deriving Show
+import Control.Applicative (liftA2)
 
--- char :: Char -> Parser Char
--- char c = do
---   x <- nom
---   if x == c
---   then result x
---   else empty
+import TypeInstances
 
 satisfy :: (Char -> Bool) -> Parser Char
 satisfy p = do
@@ -117,15 +110,51 @@ listParser = do
   xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
   result $ List xs
 
-wordParser :: Parser String
+wordParser :: Parser Value
 wordParser = do
-  str <- many $ parseMaybe $ isChar isLetter
-  result str
+  str <- some $ parseMaybe $ isChar isLetter
+  result $ Name str
 
-scopeParser :: Parser [Value]
-scopeParser = between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
+scopeParser :: Parser Value
+scopeParser = do
+  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser <|> wordParser <|> scopeParser) <|> result []
+  result $ Scope xs
 
 valueParser :: Parser Value
 valueParser = boolParser
   <|> numberParser
-  -- <|> scopeParser
+  <|> listParser
+  <|> scopeParser
+
+plus :: [Maybe Value] -> Maybe Value
+plus xs = foldl (liftA2 (+)) (pure $ Number 0) xs
+
+minus :: [Maybe Value] -> Maybe Value
+minus [] = Nothing
+minus (x:xs) = foldl (liftA2 (-)) x xs
+
+run :: IO ()
+run = do
+  r <- getLine
+  let p = eval . parse valueParser
+  print $ p r
+  -- print $ parse valueParser r
+
+strComp :: String -> String -> Bool
+strComp [] [] = True
+strComp (x:xs) (y:ys) = if x == y then strComp xs ys else False
+strComp _ _ = False
+
+type Function = [Maybe Value] -> Maybe Value
+type Basics = [(String, Function)]
+
+basics :: Basics
+basics = [("plus", plus), ("minus", minus)]
+
+getBasic :: String -> Function
+getBasic name = snd $ (!! 0) $ filter (strComp name . fst) basics
+
+eval :: Maybe Value -> Maybe Value
+eval (Just (Scope ((Name func) : xs))) = (getBasic func) $ map (eval . Just) xs
+eval (Just x) = Just x
+eval Nothing = Nothing
