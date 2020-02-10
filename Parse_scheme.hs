@@ -202,3 +202,5 @@ eval fs (Just (Scope [Name "if", cond, true, false])) =
 eval fs (Just (Scope (name : xs))) = apply fs name $ map (eval fs . Just) xs
 eval _ (Just x) = Just x
 eval _ Nothing = Nothing
+
+-- (define (f x) (if (eq x 0) 1 (f (minus x 1))))
