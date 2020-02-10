@@ -130,8 +130,14 @@ eq :: [Maybe Value] -> Maybe Value
 eq [(Just x), (Just y)] = Just $ Bool $ x == y
 eq _ = Nothing
 
-numericOp :: (Value-> Value -> Value) -> [Maybe Value] -> Maybe Value
+numericOp :: (Value -> Value -> Value) -> [Maybe Value] -> Maybe Value
 numericOp op = foldl1 (liftA2 op)
+
+boolOp :: (Value -> Value -> Bool) -> [Maybe Value] -> Maybe Value
+boolOp op [x, y] = fmap Bool $ liftA2 op x y
+boolOp _ _ = Nothing
+
+
 
 if' :: [Maybe Value] -> Maybe Value
 if' [(Just (Bool cond)), true, false] = if cond then true else false
@@ -150,23 +156,41 @@ type Basics = [(String, Function)]
 basics :: Basics
 basics = [("plus", numericOp (+))
          ,("minus", numericOp (-))
+         ,("lt", boolOp (<))
+         ,("gt", boolOp (>))
          ,("eq", eq)
          ,("if", if')]
 
 apply :: Value -> [Maybe Value] -> Maybe Value
 apply (Name func) args = case lookup func basics of
-  Nothing -> Nothing
+  Nothing -> applyFunc func args
   (Just f) -> f args
 apply _ _ = Nothing
 
+applyFunc :: String -> [Maybe Value] -> Maybe Value
+applyFunc func args = case lookup func [(func, testFunc)] of
+  Nothing -> Just $ Name "fails"
+  (Just f) -> let env = bindVals (getArgs f) args in
+    eval (replaceWithVals env $ getBody f)
+
+replaceWithVals :: Env -> [Value] -> Maybe Value
+replaceWithVals _ [] = Nothing
+replaceWithVals env (x:xs) = fmap Scope $ sequence $ (Just x) : (map replace xs) 
+  where
+    replace :: Value -> Maybe Value
+    replace (Name a) = lookup a env
+    replace a = Just a
+
+testFunc :: Value
+testFunc = Function "a" [Name "x",Name "y"] [Name "plus",Name "x",Name "y"] []
+
 bindVals :: [Value] -> [Maybe Value] -> Env
 bindVals [] _ = []
-bindVals (Name a : vars) (x : xs) = (a, x) : bindVals vars xs
+bindVals (Name a : vars) (Just x : xs) = (a, x) : bindVals vars xs
 
 eval :: Maybe Value -> Maybe Value
 eval (Just (Scope [Name "define", Scope (Name f : arg), Scope body])) =
   Just $ Function f arg body []
--- eval (Just (Scope (name : xs))) = 
 eval (Just (Scope (name : xs))) = apply name $ map (eval . Just) xs
 eval (Just x) = Just x
 eval Nothing = Nothing

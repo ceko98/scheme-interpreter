@@ -12,7 +12,7 @@ module TypeInstances (
 import Prelude hiding ((<*>))
 import Data.Monoid hiding (Sum)
 
-type Env = [(String, Maybe Value)]
+type Env = [(String, Value)]
 
 data Value
   = Bool Bool
@@ -20,7 +20,10 @@ data Value
   | List [Value]
   | Name String
   | Scope [Value]
-  | Function String [Value] [Value] Env
+  | Function { getName :: String,
+               getArgs :: [Value],
+               getBody :: [Value],
+               getValues :: Env }
   deriving Show
 
 instance Semigroup Value where
@@ -66,6 +69,12 @@ instance Eq Value where
   Number a == Number b = a == b
   Bool a == Bool b = a == b
   x /= y = not $ x == y
+
+instance Ord Value where
+  Number a <= Number b = a <= b
+  Number a >= Number b = a >= b
+  x > y = not $ x <= y
+  x < y = not $ x >= y
 
 -- instance Functor Value where
 --   fmap f (Number a) (Number b) = Number $ f a b
