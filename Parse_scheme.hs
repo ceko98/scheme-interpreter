@@ -149,10 +149,10 @@ run = do
   -- print $ parse valueParser r
 
 type Function = [Maybe Value] -> Maybe Value
-type Basics = [(String, Function)]
+type Primitives = [(String, Function)]
 
-basics :: Basics
-basics = [("plus", numericOp (+))
+primitives :: Primitives
+primitives = [("plus", numericOp (+))
          ,("minus", numericOp (-))
          ,("lt", boolOp (<))
          ,("gt", boolOp (>))
@@ -160,7 +160,7 @@ basics = [("plus", numericOp (+))
          ,("if", if')]
 
 apply :: Value -> [Maybe Value] -> Maybe Value
-apply (Name func) args = case lookup func basics of
+apply (Name func) args = case lookup func primitives of
   Nothing -> applyFunc func args
   (Just f) -> f args
 apply _ _ = Nothing
