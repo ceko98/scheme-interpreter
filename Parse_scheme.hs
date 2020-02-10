@@ -126,16 +126,12 @@ valueParser = boolParser
   <|> listParser
   <|> scopeParser
 
-plus :: [Maybe Value] -> Maybe Value
-plus xs = foldl (liftA2 (+)) (pure $ Number 0) xs
-
-minus :: [Maybe Value] -> Maybe Value
-minus [] = Nothing
-minus (x:xs) = foldl (liftA2 (-)) x xs
-
 eq :: [Maybe Value] -> Maybe Value
 eq [(Just x), (Just y)] = Just $ Bool $ x == y
 eq _ = Nothing
+
+numericOp :: (Value-> Value -> Value) -> [Maybe Value] -> Maybe Value
+numericOp op = foldl1 (liftA2 op)
 
 if' :: [Maybe Value] -> Maybe Value
 if' [(Just (Bool cond)), true, false] = if cond then true else false
@@ -148,31 +144,41 @@ run = do
   print $ p r
   -- print $ parse valueParser r
 
-strComp :: String -> String -> Bool
-strComp [] [] = True
-strComp (x:xs) (y:ys) = if x == y then strComp xs ys else False
-strComp _ _ = False
-
 type Function = [Maybe Value] -> Maybe Value
 type Basics = [(String, Function)]
 
 basics :: Basics
-basics = [("plus", plus), ("minus", minus), ("eq", eq), ("if", if')]
+basics = [("plus", numericOp (+))
+         ,("minus", numericOp (-))
+         ,("eq", eq)
+         ,("if", if')]
 
-getBasic :: String -> Function
-getBasic name = snd $ (!! 0) $ filter (strComp name . fst) basics
+apply :: Value -> [Maybe Value] -> Maybe Value
+apply (Name func) args = case lookup func basics of
+  Nothing -> Nothing
+  (Just f) -> f args
+apply _ _ = Nothing
+
+bindVals :: [Value] -> [Maybe Value] -> Env
+bindVals [] _ = []
+bindVals (Name a : vars) (x : xs) = (a, x) : bindVals vars xs
 
 eval :: Maybe Value -> Maybe Value
-eval (Just (Scope ((Name func) : xs))) = (getBasic func) $ map (eval . Just) xs
+eval (Just (Scope [Name "define", Scope (Name f : arg), Scope body])) =
+  Just $ Function f arg body []
+-- eval (Just (Scope (name : xs))) = 
+eval (Just (Scope (name : xs))) = apply name $ map (eval . Just) xs
 eval (Just x) = Just x
 eval Nothing = Nothing
+-- eval if
+-- eval define
 
-defineParser :: Parser (Value, Value)
-defineParser = do
-  char '('
-  string "define "
-  args <- scopeParser
-  char ' '
-  body <- scopeParser
-  char ')'
-  result (args, body)
+-- defineParser :: Parser (Value, Value)
+-- defineParser = do
+--   char '('
+--   string "define "
+--   args <- between (char '(') (char ')') $ sepBy (char ' ') wordParser
+--   char ' '
+--   body <- scopeParser
+--   char ')'
+--   result (args, body)

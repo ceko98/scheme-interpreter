@@ -5,11 +5,14 @@
 {-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- warn about incomplete patterns v2
 
 module TypeInstances (
-  Value(..)
+  Value(..),
+  Env
 ) where
 
 import Prelude hiding ((<*>))
 import Data.Monoid hiding (Sum)
+
+type Env = [(String, Maybe Value)]
 
 data Value
   = Bool Bool
@@ -17,6 +20,7 @@ data Value
   | List [Value]
   | Name String
   | Scope [Value]
+  | Function String [Value] [Value] Env
   deriving Show
 
 instance Semigroup Value where
@@ -50,6 +54,13 @@ instance Num Value where
   Number a * Number b = Number $ a * b
   Number a + Number b = Number $ a + b
   Number a - Number b = Number $ a - b
+
+instance Enum Value where
+  succ (Number a) = Number $ a + 1
+  pred (Number a) = Number $ a - 1
+
+-- instance Integral Value where
+--   Number a `div` Number b = Number $ a `div` b
 
 instance Eq Value where
   Number a == Number b = a == b
