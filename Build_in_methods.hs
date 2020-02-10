@@ -51,6 +51,11 @@ instance Num Value where
   Number a + Number b = Number $ a + b
   Number a - Number b = Number $ a - b
 
+instance Eq Value where
+  Number a == Number b = a == b
+  Bool a == Bool b = a == b
+  x /= y = not $ x == y
+
 -- instance Functor Value where
 --   fmap f (Number a) (Number b) = Number $ f a b
 

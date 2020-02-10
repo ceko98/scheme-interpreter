@@ -133,6 +133,14 @@ minus :: [Maybe Value] -> Maybe Value
 minus [] = Nothing
 minus (x:xs) = foldl (liftA2 (-)) x xs
 
+eq :: [Maybe Value] -> Maybe Value
+eq [(Just x), (Just y)] = Just $ Bool $ x == y
+eq _ = Nothing
+
+if' :: [Maybe Value] -> Maybe Value
+if' [(Just (Bool cond)), true, false] = if cond then true else false
+if' _ = Nothing
+
 run :: IO ()
 run = do
   r <- getLine
@@ -149,7 +157,7 @@ type Function = [Maybe Value] -> Maybe Value
 type Basics = [(String, Function)]
 
 basics :: Basics
-basics = [("plus", plus), ("minus", minus)]
+basics = [("plus", plus), ("minus", minus), ("eq", eq), ("if", if')]
 
 getBasic :: String -> Function
 getBasic name = snd $ (!! 0) $ filter (strComp name . fst) basics
@@ -158,3 +166,13 @@ eval :: Maybe Value -> Maybe Value
 eval (Just (Scope ((Name func) : xs))) = (getBasic func) $ map (eval . Just) xs
 eval (Just x) = Just x
 eval Nothing = Nothing
+
+defineParser :: Parser (Value, Value)
+defineParser = do
+  char '('
+  string "define "
+  args <- scopeParser
+  char ' '
+  body <- scopeParser
+  char ')'
+  result (args, body)
