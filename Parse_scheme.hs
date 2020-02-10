@@ -137,8 +137,6 @@ boolOp :: (Value -> Value -> Bool) -> [Maybe Value] -> Maybe Value
 boolOp op [x, y] = fmap Bool $ liftA2 op x y
 boolOp _ _ = Nothing
 
-
-
 if' :: [Maybe Value] -> Maybe Value
 if' [(Just (Bool cond)), true, false] = if cond then true else false
 if' _ = Nothing
@@ -191,18 +189,10 @@ bindVals (Name a : vars) (Just x : xs) = (a, x) : bindVals vars xs
 eval :: Maybe Value -> Maybe Value
 eval (Just (Scope [Name "define", Scope (Name f : arg), Scope body])) =
   Just $ Function f arg body []
+eval (Just (Scope [Name "if", cond, true, false])) =
+  case eval $ Just cond of
+    Just (Bool True) -> eval $ Just true
+    _ -> eval $ Just false
 eval (Just (Scope (name : xs))) = apply name $ map (eval . Just) xs
 eval (Just x) = Just x
 eval Nothing = Nothing
--- eval if
--- eval define
-
--- defineParser :: Parser (Value, Value)
--- defineParser = do
---   char '('
---   string "define "
---   args <- between (char '(') (char ')') $ sepBy (char ' ') wordParser
---   char ' '
---   body <- scopeParser
---   char ')'
---   result (args, body)
