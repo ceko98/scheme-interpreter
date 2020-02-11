@@ -24,16 +24,16 @@ applyFunc fs func args = case lookup func fs of
 
 replaceWithVals :: Env -> [Value] -> Maybe Value
 replaceWithVals _ [] = Nothing
-replaceWithVals env (x:xs) = fmap Scope $ sequence $ (Just x) : (map replace xs) 
+replaceWithVals env xs = fmap Scope $ sequence $ map replace xs 
   where
     replace :: Value -> Maybe Value
-    replace (Name a) = lookup a env
+    replace (Name a) = case lookup a env of
+      Nothing -> Just $ Name a
+      x -> x
     replace (Scope vals) = replaceWithVals env vals
     replace a = Just a
 
 bindVals :: [Value] -> [Maybe Value] -> Env
-bindVals [] _ = []
-bindVals _ [] = []
 bindVals (Name a : vars) (Just x : xs) = (a, x) : bindVals vars xs
 bindVals _ _ = []
 
