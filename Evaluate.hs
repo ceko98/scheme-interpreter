@@ -18,7 +18,9 @@ applyFunc :: Defines -> String -> [Maybe Value] -> Maybe Value
 applyFunc fs func args = case lookup func fs of
   Nothing -> Nothing
   (Just f) -> let env = bindVals (getArgs f) args in
-    eval fs (replaceWithVals env $ getBody f)
+    if length args /= length (getArgs f)
+      then Nothing
+      else eval fs (replaceWithVals env $ getBody f)
 
 replaceWithVals :: Env -> [Value] -> Maybe Value
 replaceWithVals _ [] = Nothing
