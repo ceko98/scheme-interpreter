@@ -9,7 +9,7 @@ run defines = do
   let p = eval defines $ parse valueParser r
   print p
   case p of
-    Just (Function name args body env) -> run $ (name, Function name args body env) : defines
+    Just (Function name args body) -> run $ (name, Function name args body) : defines
     _ -> run defines
 
 main :: IO ()
