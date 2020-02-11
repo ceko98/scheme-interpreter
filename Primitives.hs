@@ -14,8 +14,8 @@ primitives = [("plus", numericOp (+))
          ,("lt", boolOp (<))
          ,("gt", boolOp (>))
          ,("eq", eq)
-         ,("car", car)
-         ,("cdr", cdr)]
+         ,("car", listOp head)
+         ,("cdr", listOp (List . tail))]
 
 eq :: [Maybe Value] -> Maybe Value
 eq [(Just x), (Just y)] = Just $ Bool $ x == y
@@ -28,10 +28,6 @@ boolOp :: (Value -> Value -> Bool) -> [Maybe Value] -> Maybe Value
 boolOp op [x, y] = fmap Bool $ liftA2 op x y
 boolOp _ _ = Nothing
 
-car :: [Maybe Value] -> Maybe Value
-car [(Just (List (x:xs)))] = Just x
-car _ = Nothing
-
-cdr :: [Maybe Value] -> Maybe Value
-cdr [(Just (List (_:xs)))] = Just $ List xs
-cdr _ = Nothing
+listOp :: ([Value] -> Value) -> [Maybe Value] -> Maybe Value
+listOp f [(Just (List xs))] = Just $ f xs
+listOp _ _ = Nothing
