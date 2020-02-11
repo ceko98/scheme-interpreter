@@ -17,8 +17,6 @@ import Parser
 
 import Data.Char (isNumber, isLetter)
 
-import Control.Applicative (liftA2)
-
 import TypeInstances
 
 satisfy :: (Char -> Bool) -> Parser Char
