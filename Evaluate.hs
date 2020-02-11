@@ -37,7 +37,7 @@ bindVals _ _ = []
 
 eval :: Defines -> Maybe Value -> Maybe Value
 eval _ (Just (Scope [Name "define", Scope (Name f : arg), Scope body])) =
-  (Just $ Function f arg body [])
+  (Just $ Function f arg body)
 eval fs (Just (Scope [Name "if", cond, true, false])) =
   case eval fs $ Just cond of
     Just (Bool True) -> eval fs $ Just true

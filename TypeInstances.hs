@@ -22,8 +22,7 @@ data Value
   | Scope [Value]
   | Function { getName :: String,
                getArgs :: [Value],
-               getBody :: [Value],
-               getValues :: Env }
+               getBody :: [Value]}
   deriving Show
 
 instance Num Value where
