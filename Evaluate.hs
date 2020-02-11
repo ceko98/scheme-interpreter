@@ -1,3 +1,13 @@
+module Evaluate (
+  eval,
+  Defines
+) where
+
+import Primitives
+import TypeInstances
+
+type Defines = [(String, Value)]
+
 apply :: Defines -> Value -> [Maybe Value] -> Maybe Value
 apply fs (Name func) args = case lookup func primitives of
   Nothing -> applyFunc fs func args

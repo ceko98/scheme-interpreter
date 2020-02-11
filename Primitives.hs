@@ -1,3 +1,10 @@
+module Primitives (
+  primitives
+) where
+
+import TypeInstances
+import Control.Applicative ( liftA2 )
+
 type Function = [Maybe Value] -> Maybe Value
 type Primitives = [(String, Function)]
 
@@ -6,8 +13,7 @@ primitives = [("plus", numericOp (+))
          ,("minus", numericOp (-))
          ,("lt", boolOp (<))
          ,("gt", boolOp (>))
-         ,("eq", eq)
-         ,("if", if')]
+         ,("eq", eq)]
 
 eq :: [Maybe Value] -> Maybe Value
 eq [(Just x), (Just y)] = Just $ Bool $ x == y
@@ -19,7 +25,3 @@ numericOp op = foldl1 (liftA2 op)
 boolOp :: (Value -> Value -> Bool) -> [Maybe Value] -> Maybe Value
 boolOp op [x, y] = fmap Bool $ liftA2 op x y
 boolOp _ _ = Nothing
-
-if' :: [Maybe Value] -> Maybe Value
-if' [(Just (Bool cond)), true, false] = if cond then true else false
-if' _ = Nothing

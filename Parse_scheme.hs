@@ -4,8 +4,9 @@
 {-# OPTIONS_GHC -fwarn-name-shadowing #-}          -- use different names!
 {-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- warn about incomplete patterns v2
 
-module Parse
-  ( isChar, Monoid(..) ) where
+module Parse (
+  valueParser
+) where
 
 import Parser
   ( Parser, nom
@@ -125,5 +126,3 @@ valueParser = boolParser
   <|> numberParser
   <|> listParser
   <|> scopeParser
-
--- (define (f x) (if (eq x 0) 1 (f (minus x 1))))

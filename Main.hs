@@ -1,4 +1,5 @@
-type Defines = [(String, Value)]
+import Parse
+import Parser ( parse )
 
 run :: Defines -> IO ()
 run defines = do
