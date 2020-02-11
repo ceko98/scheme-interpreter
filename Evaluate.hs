@@ -16,7 +16,7 @@ apply _ _ _ = Nothing
 
 applyFunc :: Defines -> String -> [Maybe Value] -> Maybe Value
 applyFunc fs func args = case lookup func fs of
-  Nothing -> Just $ Name "fails"
+  Nothing -> Nothing
   (Just f) -> let env = bindVals (getArgs f) args in
     eval fs (replaceWithVals env $ getBody f)
 
