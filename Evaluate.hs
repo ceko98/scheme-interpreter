@@ -26,6 +26,7 @@ replaceWithVals env (x:xs) = fmap Scope $ sequence $ (Just x) : (map replace xs)
   where
     replace :: Value -> Maybe Value
     replace (Name a) = lookup a env
+    replace (Scope vals) = replaceWithVals env vals
     replace a = Just a
 
 bindVals :: [Value] -> [Maybe Value] -> Env

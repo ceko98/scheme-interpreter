@@ -1,5 +1,7 @@
 import Parse
 import Parser ( parse )
+import Evaluate
+import TypeInstances
 
 run :: Defines -> IO ()
 run defines = do
