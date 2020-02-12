@@ -23,24 +23,4 @@ data Value
   | Function { getName :: String,
                getArgs :: [Value],
                getBody :: [Value]}
-  deriving Show
-
-instance Num Value where
-  Number a * Number b = Number $ a * b
-  Number a + Number b = Number $ a + b
-  Number a - Number b = Number $ a - b
-
-instance Enum Value where
-  succ (Number a) = Number $ a + 1
-  pred (Number a) = Number $ a - 1
-
-instance Eq Value where
-  Number a == Number b = a == b
-  Bool a == Bool b = a == b
-  x /= y = not $ x == y
-
-instance Ord Value where
-  Number a <= Number b = a <= b
-  Number a >= Number b = a >= b
-  x > y = not $ x <= y
-  x < y = not $ x >= y
+  deriving (Eq, Ord, Show)

@@ -1,4 +1,4 @@
-import Parse
+import ParseScheme
 import Parser ( parse )
 import Evaluate
 import TypeInstances

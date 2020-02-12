@@ -4,7 +4,7 @@
 {-# OPTIONS_GHC -fwarn-name-shadowing #-}          -- use different names!
 {-# OPTIONS_GHC -fwarn-incomplete-uni-patterns #-} -- warn about incomplete patterns v2
 
-module Parse (
+module ParseScheme (
   valueParser
 ) where
 
@@ -16,6 +16,8 @@ import Parser
   )
 
 import Data.Char (isNumber, isLetter)
+
+import Data.Maybe (maybeToList)
 
 import TypeInstances
 
@@ -45,7 +47,7 @@ isChar f c = if f c then Just c else Nothing
 number :: Parser Integer
 number = fmap (foldl ((+) . (10*)) 0) $ some $ parseMaybe isInteger
 
-maybeToParser :: Maybe a -> Parser a 
+maybeToParser :: Maybe a -> Parser a
 maybeToParser Nothing = empty
 maybeToParser (Just x) = pure x
 
@@ -80,15 +82,10 @@ ignoreRight p ign = do
   result x
 
 sepBy :: Parser del -> Parser a -> Parser [a]
-sepBy del p = do
-  xs <- many (ignoreRight p del)
-  x <- p
-  result $ xs ++ [x]
+sepBy del p = many $ ignoreRight p (optional del)
 
 trueParser :: Parser Value
-trueParser = do
-  string "#t"
-  result $ Bool True
+trueParser = Bool True <$ string "#t"
 
 falseParser :: Parser Value
 falseParser = do
@@ -103,24 +100,20 @@ numberParser = do
   x <- number
   result $ Number x
 
-listParser :: Parser Value
-listParser = do
-  char '\''
-  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser) <|> result []
-  result $ List xs
-
 wordParser :: Parser Value
 wordParser = do
   str <- some $ parseMaybe $ isChar isLetter
   result $ Name str
 
+optional :: Parser a -> Parser (Maybe a)
+optional px = fmap Just px <|> result Nothing
+
 scopeParser :: Parser Value
-scopeParser = do
-  xs <- between (char '(') (char ')') $ sepBy (char ' ') (boolParser <|> numberParser <|> listParser <|> wordParser <|> scopeParser) <|> result []
-  result $ Scope xs
+scopeParser = Scope <$> (between (char '(') (char ')') $ sepBy (char ' ') valueParser)
 
 valueParser :: Parser Value
-valueParser = boolParser
+valueParser =
+      boolParser
   <|> numberParser
-  <|> listParser
+  <|> wordParser
   <|> scopeParser

@@ -9,13 +9,15 @@ type Function = [Maybe Value] -> Maybe Value
 type Primitives = [(String, Function)]
 
 primitives :: Primitives
-primitives = [("plus", numericOp (+))
-         ,("minus", numericOp (-))
-         ,("lt", boolOp (<))
-         ,("gt", boolOp (>))
-         ,("eq", eq)
-         ,("car", listOp head)
-         ,("cdr", listOp (List . tail))]
+primitives =
+  [ ("plus", numericOp addVal)
+  , ("minus", numericOp minusVal)
+  , ("lt", boolOp (<))
+  , ("gt", boolOp (>))
+  , ("eq", eq)
+  , ("car", listOp head)
+  , ("cdr", listOp (List . tail))
+  ]
 
 eq :: [Maybe Value] -> Maybe Value
 eq [(Just x), (Just y)] = Just $ Bool $ x == y
@@ -31,3 +33,11 @@ boolOp _ _ = Nothing
 listOp :: ([Value] -> Value) -> [Maybe Value] -> Maybe Value
 listOp f [(Just (List xs))] = Just $ f xs
 listOp _ _ = Nothing
+
+addVal :: Value -> Value -> Value
+addVal (Number x) (Number y) = Number $ x + y
+addVal _ _ = error "can't add these"
+
+minusVal :: Value -> Value -> Value
+minusVal (Number x) (Number y) = Number $ x - y
+minusVal _ _ = error "can't minus these"
