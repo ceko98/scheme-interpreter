@@ -31,3 +31,7 @@ boolOp _ _ = Nothing
 listOp :: ([Value] -> Value) -> [Maybe Value] -> Maybe Value
 listOp f [(Just (List xs))] = Just $ f xs
 listOp _ _ = Nothing
+
+cons :: [Maybe Value] -> Maybe Value
+cons [(Just x), (Just (List))]
+-- ....
